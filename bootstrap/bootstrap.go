@@ -33,7 +33,7 @@ func bootstrap(
 				routes.Setup()
 				port := env.ServerPort
 				if err := handler.App.Listen(":" + port); err != nil {
-					logger.Panic(err)
+					logger.Panicf("failed to start server: %v", err)
 				}
 			}()
 			return nil

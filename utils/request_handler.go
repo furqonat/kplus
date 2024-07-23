@@ -6,9 +6,9 @@ type RequestHandler struct {
 	App *fiber.App
 }
 
-func NewRequestHandler() *RequestHandler {
+func NewRequestHandler() RequestHandler {
 	app := fiber.New(fiber.Config{})
-	return &RequestHandler{
+	return RequestHandler{
 		App: app,
 	}
 }

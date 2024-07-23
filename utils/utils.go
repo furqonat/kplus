@@ -8,7 +8,7 @@ import (
 
 var Module = fx.Options(
 	fx.Provide(NewRequestHandler),
-	fx.Populate(NewEnv),
+	fx.Provide(NewEnv),
 	fx.Provide(GetLogger),
 	fx.Provide(NewDatabase),
 	fx.Provide(NewJwt),
@@ -23,7 +23,6 @@ func IsPhoneNumber(input string) bool {
 	return phoneRegex.MatchString(input)
 }
 
-// isGmailAddress checks if the input string is a Gmail address
 func IsGmailAddress(input string) bool {
 	gmailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@gmail\.com$`)
 	return gmailRegex.MatchString(input)

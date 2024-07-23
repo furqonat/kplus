@@ -10,10 +10,10 @@ services:
       - MYSQL_PASSWORD=root
     ports:
       - '3306:3306'
-  app:
-    build: .
-    restart: on-failure
-    depends_on:
-      - mariadb
-    ports:
-      - '8080:8080'
+  # app:
+  #   build: .
+  #   restart: on-failure
+  #   depends_on:
+  #     - mariadb
+  #   ports:
+  #     - '8080:8080'

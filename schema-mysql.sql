@@ -1,3 +1,4 @@
+-- Active: 1721762008159@@127.0.0.1@3306@kplus
 CREATE TABLE IF NOT EXISTS `users` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `phone` varchar(255) NOT NULL UNIQUE,
@@ -7,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `email_verified` BOOLEAN NOT NULL DEFAULT FALSE,
     `password` varchar(255) NOT NULL,
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`) 
+    PRIMARY KEY (`id`)
 );
 
 CREATE TABLE IF NOT EXISTS `user_details` (
@@ -21,10 +22,11 @@ CREATE TABLE IF NOT EXISTS `user_details` (
     `salary` DECIMAL NOT NULL,
     `selfie` varchar(255) NOT NULL,
     `selfie_with_national_id` varchar(255) NOT NULL,
+    `national_id_image` varchar(255) NOT NULL,
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
- );
+);
 
 CREATE TABLE IF NOT EXISTS `loan_limits` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -43,7 +45,11 @@ CREATE TABLE IF NOT EXISTS `transactions` (
     `fee` DECIMAL NOT NULL,
     `installment` DECIMAL NOT NULL,
     `interest` DECIMAL NOT NULL,
-    `status` ENUM('pending', 'success', 'failed') NOT NULL DEFAULT 'pending',
+    `status` ENUM(
+        'pending',
+        'success',
+        'failed'
+    ) NOT NULL DEFAULT 'pending',
     `asset_name` varchar(255) NOT NULL,
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),

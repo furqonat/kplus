@@ -18,6 +18,5 @@ type SignUpDto struct {
 	Role     *string `json:"role,omitempty"`
 	Phone    string  `json:"phone"`
 	Email    *string `json:"email,omitempty"`
-	Username string  `json:"username"`
 	Password string  `json:"password"`
 }

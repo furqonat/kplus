@@ -16,10 +16,10 @@ const (
 
 type JwtCustomClaims struct {
 	jwt.RegisteredClaims
-	Role      string
-	ExpiresAt *int64
-	UserID    string
-	TokenType TokenType
+	Role      string    `json:"role"`
+	ExpiresAt *int64    `json:"expires_at"`
+	UserID    string    `json:"user_id"`
+	TokenType TokenType `json:"token_type"`
 }
 
 type Jwt struct {
@@ -27,8 +27,8 @@ type Jwt struct {
 	logger Logger
 }
 
-func NewJwt(env Env, logger Logger) *Jwt {
-	return &Jwt{
+func NewJwt(env Env, logger Logger) Jwt {
+	return Jwt{
 		env:    env,
 		logger: logger,
 	}
@@ -38,6 +38,7 @@ func (j *Jwt) GenerateToken(payload *JwtCustomClaims) (string, error) {
 	payload.RegisteredClaims.IssuedAt = jwt.NewNumericDate(time.Now())
 	payload.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(24 * time.Hour))
 	payload.RegisteredClaims.NotBefore = jwt.NewNumericDate(time.Now())
+	payload.RegisteredClaims.Subject = payload.UserID
 	if payload.ExpiresAt != nil {
 		payload.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Unix(*payload.ExpiresAt, 0))
 	}

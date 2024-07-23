@@ -15,15 +15,16 @@ type AuthService struct {
 	jwt utils.Jwt
 }
 
-func NewAuthService(db utils.Database, jwt utils.Jwt) *AuthService {
-	return &AuthService{
+func NewAuthService(db utils.Database, jwt utils.Jwt) AuthService {
+	return AuthService{
 		db:  db,
 		jwt: jwt,
 	}
 }
 
 func (a AuthService) SignIn(data dto.SignInDto) (*dto.ResponseSignInDto, error) {
-	var id, email, password, phone string
+	var id, password, phone string
+	var email *string
 	if err := a.db.QueryRow(`SELECT id, phone, email, password FROM users WHERE phone = ? OR email = ?`, data.PhoneOrEmail, data.PhoneOrEmail).Scan(
 		&id, &phone, &email, &password,
 	); errors.Is(err, sql.ErrNoRows) {
@@ -41,18 +42,20 @@ func (a AuthService) SignIn(data dto.SignInDto) (*dto.ResponseSignInDto, error) 
 	})
 }
 
-func (a AuthService) RefreshToken(refreshToken string) (*dto.ResponseSignInDto, error) {
-
-	claims, err := a.jwt.VerifyToken(refreshToken)
+func (a AuthService) RefreshToken(claims utils.JwtCustomClaims) (*string, error) {
+	expiresAt := time.Now().Add(utils.OneDay)
+	refreshClaims := utils.JwtCustomClaims{
+		UserID:    claims.UserID,
+		ExpiresAt: utils.Int64Pointer(expiresAt.Unix()),
+		TokenType: utils.AccessToken,
+		Role:      claims.Role,
+	}
+	refresh, err := a.jwt.GenerateToken(&refreshClaims)
 	if err != nil {
 		return nil, err
 	}
-	return a.generateToken(utils.JwtCustomClaims{
-		UserID:    claims.UserID,
-		ExpiresAt: claims.ExpiresAt,
-		Role:      claims.Role,
-		TokenType: claims.TokenType,
-	})
+
+	return &refresh, nil
 }
 
 func (a AuthService) SignUp(user dto.SignUpDto) (*dto.ResponseSignInDto, error) {

@@ -68,3 +68,31 @@ CREATE TABLE IF NOT EXISTS `installments` (
     PRIMARY KEY (`id`),
     FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`id`) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS `fees` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `tenor` int(4) NOT NULL,
+    `fee` DECIMAL NOT NULL,
+    PRIMARY KEY (`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `interests` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `tenor` int(4) NOT NULL,
+    `interest` DECIMAL NOT NULL,
+    PRIMARY KEY (`id`)
+);
+
+INSERT INTO
+    `fees` (`tenor`, `fee`)
+VALUES (1, 2000),
+    (2, 4000),
+    (3, 6000),
+    (6, 12000);
+
+INSERT INTO
+    `interests` (`tenor`, `interest`)
+VALUES (1, 0),
+    (2, 1.2),
+    (3, 2.2),
+    (6, 3.2);

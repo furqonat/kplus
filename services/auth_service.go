@@ -83,7 +83,7 @@ func (a AuthService) SignUp(user dto.SignUpDto) (*dto.ResponseSignInDto, error) 
 		return nil, err
 	}
 
-	if err := a.createLoanLimits(fmt.Sprint(id)); err != nil {
+	if err := a.createLoanLimits(id); err != nil {
 		return nil, err
 	}
 	expiresAt := time.Now().Add(utils.OneDay)
@@ -95,7 +95,7 @@ func (a AuthService) SignUp(user dto.SignUpDto) (*dto.ResponseSignInDto, error) 
 	})
 }
 
-func (a AuthService) createLoanLimits(userID string) error {
+func (a AuthService) createLoanLimits(userID int64) error {
 	// TODO: implement with scrolife API to check credit score of user
 	// this is just for demo purpose
 	data := []dto.CreateLoanDto{

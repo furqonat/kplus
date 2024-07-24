@@ -1,4 +1,4 @@
-package services
+package test
 
 import (
 	"reflect"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"kplus.com/dto"
+	"kplus.com/services"
 	"kplus.com/utils"
 )
 
@@ -28,7 +29,7 @@ func TestUserServiceGetUser(t *testing.T) {
 		WHERE u.id = ?`).WithArgs("1").WillReturnRows(row)
 
 	// Create UserService
-	userService := NewUserService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
+	userService := services.NewUserService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
 
 	// Execute GetUser
 	result, err := userService.GetUser("1")
@@ -67,7 +68,7 @@ func TestUserServiceGetUser(t *testing.T) {
 
 func TestUserServiceCreateUserDetails(t *testing.T) {
 	// Setup mock database
-	db, mock, err := sqlmock.New()
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
@@ -83,7 +84,7 @@ func TestUserServiceCreateUserDetails(t *testing.T) {
 	).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Create UserService
-	userService := NewUserService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
+	userService := services.NewUserService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
 
 	// Execute CreateUserDetails
 	data := dto.UserDetailsDto{
@@ -128,7 +129,7 @@ func TestUserServiceUpdateUserDetails(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Create UserService
-	userService := NewUserService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
+	userService := services.NewUserService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
 
 	// Execute UpdateUserDetails
 	data := dto.UserDetailsDto{
@@ -146,7 +147,7 @@ func TestUserServiceUpdateUserDetails(t *testing.T) {
 }
 func TestUserServiceGetLoanLimit(t *testing.T) {
 	// Setup mock database
-	db, mock, err := sqlmock.New()
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
@@ -161,10 +162,10 @@ func TestUserServiceGetLoanLimit(t *testing.T) {
 	mock.ExpectQuery(`
 		SELECT l.id, l.limit, l.tenor FROM loans l
 		WHERE l.user_id = ? LIMIT 5`,
-	).WithArgs("1").WillReturnRows(rows)
+	).WithArgs(1).WillReturnRows(rows)
 
 	// Create UserService
-	userService := NewUserService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
+	userService := services.NewUserService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
 
 	// Execute GetLoanLimit
 	result, err := userService.GetLoanLimit(1)

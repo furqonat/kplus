@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"go.uber.org/fx"
+	"golang.org/x/exp/rand"
 )
 
 var Module = fx.Options(
@@ -39,6 +40,18 @@ func IntPtr(value int) *int {
 
 func StringToInt(s string) int {
 	if v, err := strconv.Atoi(s); err != nil {
+		return 0
+	} else {
+		return v
+	}
+}
+
+func RandomInt(min, max int) int {
+	return min + rand.Intn(max-min)
+}
+
+func StringToFloat(s string) float64 {
+	if v, err := strconv.ParseFloat(s, 64); err != nil {
 		return 0
 	} else {
 		return v

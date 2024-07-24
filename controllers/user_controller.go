@@ -64,7 +64,7 @@ func (u UserController) UpdateUserDetails(c *fiber.Ctx) error {
 
 func (u UserController) GetLoanLimit(c *fiber.Ctx) error {
 	token := c.Locals(utils.Token).(utils.JwtCustomClaims)
-	response, err := u.service.GetLoanLimit(token.UserID)
+	response, err := u.service.GetLoanLimit(utils.StringToInt(token.UserID))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(utils.ResponseError{
 			Message: err.Error(),

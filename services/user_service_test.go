@@ -167,7 +167,7 @@ func TestUserServiceGetLoanLimit(t *testing.T) {
 	userService := NewUserService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
 
 	// Execute GetLoanLimit
-	result, err := userService.GetLoanLimit("1")
+	result, err := userService.GetLoanLimit(1)
 	if err != nil {
 		t.Errorf("expect no error, got %v", err)
 	}

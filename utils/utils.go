@@ -2,6 +2,7 @@ package utils
 
 import (
 	"regexp"
+	"strconv"
 
 	"go.uber.org/fx"
 )
@@ -34,4 +35,12 @@ func StringPtr(value string) *string {
 
 func IntPtr(value int) *int {
 	return &value
+}
+
+func StringToInt(s string) int {
+	if v, err := strconv.Atoi(s); err != nil {
+		return 0
+	} else {
+		return v
+	}
 }

@@ -29,9 +29,7 @@ func (u UserService) CreateUserDetails(data dto.UserDetailsDto) (int64, error) {
 	re, err := u.db.Exec(`
 		INSERT INTO user_details
 		(user_id, full_name, legal_name, place_of_birth, date_of_birth, salary, selfie, selfie_with_national_id, identity_number, national_id_image)
-		VALUES
-		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`, data.UserID, data.FullName, data.LegalName, data.PlaceOfBirth, data.DateOfBirth, data.Salary, data.Selfie, data.SelfieWithNationalID, data.Nik, data.NationalIdImage)
+		VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, data.UserID, data.FullName, data.LegalName, data.PlaceOfBirth, data.DateOfBirth, data.Salary, data.Selfie, data.SelfieWithNationalID, data.Nik, data.NationalIdImage)
 
 	if err != nil {
 		return 0, err
@@ -90,7 +88,7 @@ func (u UserService) UpdateUserDetails(data dto.UserDetailsDto, userID string) e
 	}
 }
 
-func (u UserService) GetLoanLimit(userID string) ([]dto.LoanDto, error) {
+func (u UserService) GetLoanLimit(userID int) ([]dto.LoanDto, error) {
 	var result []dto.LoanDto
 	rows, err := u.db.QueryContext(context.Background(), `
 		SELECT l.id, l.limit, l.tenor FROM loans l

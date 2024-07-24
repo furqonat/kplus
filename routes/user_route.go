@@ -17,15 +17,18 @@ type UserRoute struct {
 func (u UserRoute) Setup() {
 	log.Println("setting up user routes")
 	user := u.handler.App.Group("/user")
-	user.Post("/details", u.middlewares.HandleAuthWithRoles(
+	user.Post("/", u.middlewares.HandleAuthWithRoles(
 		utils.RoleUser,
 	), u.controllers.CreateUserDetails)
-	user.Put("/details", u.middlewares.HandleAuthWithRoles(
+	user.Put("/", u.middlewares.HandleAuthWithRoles(
 		utils.RoleUser,
 	), u.controllers.UpdateUserDetails)
-	user.Get("/details", u.middlewares.HandleAuthWithRoles(
+	user.Get("/", u.middlewares.HandleAuthWithRoles(
 		utils.RoleUser,
 	), u.controllers.GetUser)
+	user.Get("/loans", u.middlewares.HandleAuthWithRoles(
+		utils.RoleUser,
+	), u.controllers.GetLoanLimit)
 }
 
 func NewUserRoute(

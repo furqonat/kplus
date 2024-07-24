@@ -82,6 +82,10 @@ func (a AuthService) SignUp(user dto.SignUpDto) (*dto.ResponseSignInDto, error) 
 	if err != nil {
 		return nil, err
 	}
+
+	if err := a.createLoanLimits(fmt.Sprint(id)); err != nil {
+		return nil, err
+	}
 	expiresAt := time.Now().Add(utils.OneDay)
 	return a.generateToken(utils.JwtCustomClaims{
 		UserID:    fmt.Sprint(id),
@@ -89,6 +93,25 @@ func (a AuthService) SignUp(user dto.SignUpDto) (*dto.ResponseSignInDto, error) 
 		Role:      utils.RoleUser,
 		TokenType: utils.AccessToken,
 	})
+}
+
+func (a AuthService) createLoanLimits(userID string) error {
+	// TODO: implement with scrolife API to check credit score of user
+	// this is just for demo purpose
+	data := []dto.CreateLoanDto{
+		{Limit: 100000, Tenor: 1},
+		{Limit: 200000, Tenor: 2},
+		{Limit: 500000, Tenor: 3},
+		{Limit: 1000000, Tenor: 6},
+	}
+
+	for _, loan := range data {
+		_, err := a.db.Exec("INSERT INTO loans (user_id, `limit`, tenor) VALUES (?, ?, ?)", userID, loan.Limit, loan.Tenor)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (a AuthService) generateToken(claims utils.JwtCustomClaims) (*dto.ResponseSignInDto, error) {

@@ -12,7 +12,10 @@ type Database struct {
 	env Env
 }
 
-func NewDatabase(env Env) Database {
+func NewDatabase(env Env, db *sql.DB) Database {
+	if db != nil {
+		return Database{db, env}
+	}
 	if env.Environment == "production" {
 
 		db, err := sql.Open("mysql", env.DatabaseUrl)

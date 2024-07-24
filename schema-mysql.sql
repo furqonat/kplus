@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `user_details` (
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS `loan_limits` (
+CREATE TABLE IF NOT EXISTS `loans` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `user_id` int(11) NOT NULL,
     `limit` DECIMAL NOT NULL,

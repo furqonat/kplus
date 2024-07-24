@@ -27,3 +27,11 @@ func IsGmailAddress(input string) bool {
 	gmailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@gmail\.com$`)
 	return gmailRegex.MatchString(input)
 }
+
+func StringPtr(value string) *string {
+	return &value
+}
+
+func IntPtr(value int) *int {
+	return &value
+}

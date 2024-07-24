@@ -4,8 +4,11 @@ go 1.22.4
 
 require github.com/spf13/viper v1.19.0
 
+require github.com/golang/mock v1.6.0 // indirect
+
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect

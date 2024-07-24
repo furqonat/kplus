@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"strings"
 
 	"kplus.com/dto"
@@ -14,10 +15,10 @@ type UserService struct {
 func (u UserService) GetUser(id string) (*dto.UserDto, error) {
 	var data dto.UserDto
 	if err := u.db.QueryRow(`
-		SELECT u.id, u.name, u.email, u.role, ud.id, ud.full_name, ud.legal_name, ud.place_of_birth, ud.date_of_birth, ud.salary, ud.selfie, ud.selfie_with_national_id, ud.identity_number, ud.national_id_image FROM users u
-		JOIN user_details ud ON u.id = ud.user_id
-		WHERE id = ?`, id).Scan(
-		&data.ID, &data.Email, &data.Role, &data.Details.ID, &data.Details.FullName, &data.Details.LegalName, &data.Details.PlaceOfBirth, &data.Details.DateOfBirth, &data.Details.Salary, &data.Details.Selfie, &data.Details.SelfieWithNationalID, &data.Details.Nik, &data.Details.NationalIdImage,
+		SELECT u.id, u.phone, u.email, u.role, ud.id, ud.full_name, ud.legal_name, ud.place_of_birth, ud.date_of_birth, ud.salary, ud.selfie, ud.selfie_with_national_id, ud.identity_number, ud.national_id_image FROM users u
+		LEFT JOIN user_details ud ON u.id = ud.user_id
+		WHERE u.id = ?`, id).Scan(
+		&data.ID, &data.Phone, &data.Email, &data.Role, &data.Details.ID, &data.Details.FullName, &data.Details.LegalName, &data.Details.PlaceOfBirth, &data.Details.DateOfBirth, &data.Details.Salary, &data.Details.Selfie, &data.Details.SelfieWithNationalID, &data.Details.Nik, &data.Details.NationalIdImage,
 	); err != nil {
 		return nil, err
 	}
@@ -87,6 +88,38 @@ func (u UserService) UpdateUserDetails(data dto.UserDetailsDto, userID string) e
 	} else {
 		return nil
 	}
+}
+
+func (u UserService) GetLoanLimit(userID string) ([]dto.LoanDto, error) {
+	var result []dto.LoanDto
+	rows, err := u.db.QueryContext(context.Background(), `
+		SELECT l.id, l.limit, l.tenor FROM loans l
+		WHERE l.user_id = ? LIMIT 5`,
+		userID,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var data dto.LoanDto
+		if err := rows.Scan(
+			&data.ID,
+			&data.Limit,
+			&data.Tenor,
+		); err != nil {
+			return nil, err
+		}
+		result = append(result, data)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func NewUserService(db utils.Database) UserService {

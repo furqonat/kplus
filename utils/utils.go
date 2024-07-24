@@ -14,6 +14,8 @@ var Module = fx.Options(
 	fx.Provide(GetLogger),
 	fx.Provide(NewDatabase),
 	fx.Provide(NewJwt),
+	fx.Provide(NewRandomIntGenerator),
+	fx.Provide(NewSqlDB),
 )
 
 func Int64Pointer(value int64) *int64 {
@@ -46,8 +48,22 @@ func StringToInt(s string) int {
 	}
 }
 
-func RandomInt(min, max int) int {
+type RandomIntGenerator interface {
+	RandomInt(min, max int) int
+}
+
+type DefaultRandomIntGenerator struct{}
+
+func (d DefaultRandomIntGenerator) RandomInt(min, max int) int {
+	return randomInt(min, max)
+}
+
+func randomInt(min, max int) int {
 	return min + rand.Intn(max-min)
+}
+
+func NewRandomIntGenerator() RandomIntGenerator {
+	return DefaultRandomIntGenerator{}
 }
 
 func StringToFloat(s string) float64 {

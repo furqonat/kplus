@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"sync"
 	"time"
@@ -13,7 +15,8 @@ import (
 )
 
 type TransactionService struct {
-	db utils.Database
+	db      utils.Database
+	randGen utils.RandomIntGenerator
 }
 
 func (t TransactionService) GetTransaction(id string) (*dto.TransactionDto, error) {
@@ -98,76 +101,101 @@ func (t TransactionService) GetTransactions(userID int) ([]dto.TransactionDto, e
 
 func (t TransactionService) CreateTransaction(data *dto.CreateTransactionDto, userId int) error {
 	var wg sync.WaitGroup
-	perfomtransaction := func(data *dto.CreateTransactionDto, userId int) error {
+	errChan := make(chan error, 1) // Buffered channel to handle errors
+
+	perfomtransaction := func(data *dto.CreateTransactionDto, userId int) {
 		defer wg.Done()
-		trx, err := t.db.Begin()
-		if err != nil {
-			return err
+		if err := t.performTransaction(data, userId); err != nil {
+			errChan <- err
+		} else {
+			errChan <- nil
 		}
+	}
 
-		contractNumber := utils.RandomInt(48, 50)
-		fee := 0.0
-		interest := 0.0
+	wg.Add(1)
+	go perfomtransaction(data, userId)
+	wg.Wait()
 
-		if err := t.db.QueryRow(`SELECT fee FROM fees WHERE tenor = ?`, data.Tenor).Scan(&fee); err != nil {
-			return err
-		}
+	// Retrieve error from channel if any
+	if err := <-errChan; err != nil {
+		return err
+	}
 
-		if err := t.db.QueryRow(`SELECT interest FROM interests WHERE tenor = ?`, data.Tenor).Scan(&interest); err != nil {
-			return err
-		}
+	return nil
+}
 
-		if fee == 0.0 || interest == 0.0 {
-			return errors.New("tenor not found")
-		}
+func (t TransactionService) performTransaction(data *dto.CreateTransactionDto, userId int) error {
+	trx, err := t.db.BeginTx(context.Background(), &sql.TxOptions{
+		Isolation: sql.LevelSerializable,
+	})
+	if err != nil {
+		return err
+	}
 
-		installment := t.calculateInterset(data.Amount, interest, data.Tenor)
-		r, err := trx.ExecContext(context.Background(), `
-		INSERT INTO transactions
-		(contract_number, user_id, otr, fee, installment, interest, status, asset_name)
-		VALUES
-		(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			contractNumber,
-			userId,
-			data.Amount,
-			fee,
-			installment+fee,
-			interest,
-			"pending",
-			data.AssetName,
+	contractNumber := t.randGen.RandomInt(48, 50)
+	fee := 0.0
+	interest := 0.0
+
+	if err := t.db.QueryRow(`SELECT fee FROM fees WHERE tenor = ?`, data.Tenor).Scan(&fee); err != nil {
+		return err
+	}
+
+	if err := t.db.QueryRow(`SELECT interest FROM interests WHERE tenor = ?`, data.Tenor).Scan(&interest); err != nil {
+		return err
+	}
+
+	if fee == 0.0 || interest == 0.0 {
+		return errors.New("tenor not found")
+	}
+
+	installment := t.calculateInterset(data.Amount, interest, data.Tenor)
+	total := installment + fee
+	r, err := trx.ExecContext(context.Background(), `
+    INSERT INTO transactions
+    (contract_number, user_id, otr, fee, installment, interest, status, asset_name)
+    VALUES
+    (?, ?, ?, ?, ?, ?, ?, ?)`,
+		contractNumber,
+		userId,
+		data.Amount,
+		fee,
+		total,
+		interest,
+		"pending",
+		data.AssetName,
+	)
+	if err != nil {
+		trx.Rollback()
+		return err
+	}
+
+	id, _ := r.LastInsertId()
+
+	for i := 1; i <= data.Tenor; i++ {
+		in := fmt.Sprintf("%.2f", math.Floor(total))
+		_, err := trx.ExecContext(context.Background(), `
+        INSERT INTO installments
+        (transaction_id, installment, due_date, period, status)
+        VALUES
+        (?, ?, ?, ?, ?)`,
+			id,
+			utils.StringToFloat(in),
+			time.Now().Add(24*30*time.Hour*time.Duration(i)),
+			i,
+			"unpaid",
 		)
 		if err != nil {
 			trx.Rollback()
 			return err
 		}
-
-		id, _ := r.LastInsertId()
-
-		for i := 1; i <= data.Tenor; i++ {
-			in := fmt.Sprintf("%.2f", math.Floor(installment))
-			_, err := trx.ExecContext(context.Background(), `
-			INSERT INTO installments
-			(transaction_id, installment, due_date, period, status)
-			VALUES
-			(?, ?, ?, ?, ?)`,
-				id,
-				utils.StringToFloat(in),
-				time.Now().Add(24*30*time.Hour*time.Duration(i)),
-				i,
-				"pending",
-			)
-			if err != nil {
-				trx.Rollback()
-				return err
-			}
-		}
-
-		return trx.Commit()
 	}
-	wg.Add(1)
-	go perfomtransaction(data, userId)
-	wg.Wait()
-	return nil
+
+	if err := t.updateUserLimit(userId, total, data.Tenor); err != nil {
+		trx.Rollback()
+		return err
+	}
+
+	return trx.Commit()
 }
 
 func (t TransactionService) calculateInterset(loan float64, interest float64, tenor int) float64 {
@@ -178,8 +206,22 @@ func (t TransactionService) calculateInterset(loan float64, interest float64, te
 	return installment
 }
 
-func NewTransactionService(db utils.Database) TransactionService {
+func (t TransactionService) updateUserLimit(userID int, limit float64, tenor int) error {
+	var currentLimit float64
+	if err := t.db.QueryRow("SELECT `limit` FROM loans WHERE user_id = ? AND tenor = ?", userID, tenor).Scan(&currentLimit); err != nil {
+		log.Println(err.Error())
+		return err
+	}
+	_, err := t.db.Exec("UPDATE loans SET `limit` = `limit` - (`limit` * ?) WHERE user_id = ?", (limit / currentLimit), userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func NewTransactionService(db utils.Database, randGen utils.RandomIntGenerator) TransactionService {
 	return TransactionService{
-		db: db,
+		db:      db,
+		randGen: randGen,
 	}
 }

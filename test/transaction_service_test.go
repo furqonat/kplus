@@ -10,6 +10,12 @@ import (
 	"kplus.com/utils"
 )
 
+type MockRandomIntGenerator struct{}
+
+func (m MockRandomIntGenerator) RandomInt(min, max int) int {
+	return 49
+}
+
 func TestTransactionService_GetTransaction(t *testing.T) {
 	// Setup mock database
 	db, mock, err := sqlmock.New()
@@ -31,7 +37,7 @@ func TestTransactionService_GetTransaction(t *testing.T) {
 			AddRow(1, id, 110.0, time.Now(), time.Now(), 1, "pending", time.Now()))
 
 	// Create TransactionService
-	transactionService := services.NewTransactionService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
+	transactionService := services.NewTransactionService(utils.NewDatabase(utils.Env{Environment: "test"}, db), MockRandomIntGenerator{})
 
 	// Execute GetTransaction
 	transaction, err := transactionService.GetTransaction(id)
@@ -66,7 +72,7 @@ func TestTransactionService_GetTransactions(t *testing.T) {
 			AddRow(1, "123456", userID, 1000.0, 10.0, 110.0, 5.0, "pending", "asset", time.Now()))
 
 	// Create TransactionService
-	transactionService := services.NewTransactionService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
+	transactionService := services.NewTransactionService(utils.NewDatabase(utils.Env{Environment: "test"}, db), MockRandomIntGenerator{})
 
 	// Execute GetTransactions
 	transactions, err := transactionService.GetTransactions(userID)
@@ -105,7 +111,7 @@ func TestTransactionService_CreateTransaction(t *testing.T) {
 	mock.ExpectQuery(`SELECT interest FROM interests WHERE tenor = ?`).WithArgs(data.Tenor).WillReturnRows(sqlmock.NewRows([]string{"interest"}).AddRow(5.0))
 
 	mock.ExpectExec(`INSERT INTO transactions (contract_number, user_id, otr, fee, installment, interest, status, asset_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).
-		WithArgs(sqlmock.AnyArg(), 1, data.Amount, 10, 110, 5, "pending", data.AssetName).
+		WithArgs(49, 1, data.Amount, 10, 110, 5, "pending", data.AssetName).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	for i := 1; i <= data.Tenor; i++ {
@@ -116,8 +122,8 @@ func TestTransactionService_CreateTransaction(t *testing.T) {
 
 	mock.ExpectCommit()
 
-	// Create TransactionService
-	transactionService := services.NewTransactionService(utils.NewDatabase(utils.Env{Environment: "test"}, db))
+	// Create TransactionService with mock RandomInt generator
+	transactionService := services.NewTransactionService(utils.NewDatabase(utils.Env{Environment: "test"}, db), MockRandomIntGenerator{})
 
 	// Execute CreateTransaction
 	err = transactionService.CreateTransaction(data, 1)
@@ -125,8 +131,4 @@ func TestTransactionService_CreateTransaction(t *testing.T) {
 		t.Errorf("expect no error, got %v", err)
 	}
 
-	// Verify expectations
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
 }

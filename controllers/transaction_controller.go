@@ -58,13 +58,12 @@ func (t TransactionController) CreateTransaction(c *fiber.Ctx) error {
 		})
 	}
 	return c.Status(fiber.StatusOK).JSON(utils.ResponseOk[string]{
-		Data:    "create transaction success",
 		Message: "create transaction success",
 	})
 }
 
-func NewTransactionController(db utils.Database) TransactionController {
+func NewTransactionController(service services.TransactionService) TransactionController {
 	return TransactionController{
-		transactionService: services.NewTransactionService(db),
+		transactionService: service,
 	}
 }

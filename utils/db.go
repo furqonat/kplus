@@ -12,25 +12,24 @@ type Database struct {
 	env Env
 }
 
-func NewDatabase(env Env, db *sql.DB) Database {
-	if db != nil {
-		return Database{db, env}
-	}
-	if env.Environment == "production" {
+func NewDatabase(env Env, d *sql.DB) Database {
+	return Database{d, env}
+}
 
+func NewSqlDB(env Env) *sql.DB {
+	if env.Environment == "production" {
 		db, err := sql.Open("mysql", env.DatabaseUrl)
 		if err != nil {
 			panic(err)
 		}
-		return Database{db, env}
+		return db
 	} else if env.Environment == "test" {
 		db, err := sql.Open("sqlite3", "./kplus.db")
 		if err != nil {
 			panic(err)
 		}
-		return Database{db, env}
+		return db
 	} else {
-
 		panic("invalid environment")
 	}
 }

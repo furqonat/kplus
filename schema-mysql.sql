@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS `transactions` (
     ) NOT NULL DEFAULT 'pending',
     `asset_name` varchar(255) NOT NULL,
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `tenor` int(4) NOT NULL,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 );
@@ -81,6 +82,17 @@ CREATE TABLE IF NOT EXISTS `interests` (
     `tenor` int(4) NOT NULL,
     `interest` DECIMAL NOT NULL,
     PRIMARY KEY (`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `payments` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `installment_id` int(11) NOT NULL,
+    `amount` DECIMAL NOT NULL,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `user_id` int(11) NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`installment_id`) REFERENCES `installments` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 );
 
 INSERT INTO

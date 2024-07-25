@@ -15,7 +15,7 @@ func NewRequestHandler() RequestHandler {
 
 type ResponseOk[T any] struct {
 	Message string `json:"message"`
-	Data    T      `json:"data"`
+	Data    T      `json:"data,omitempty"`
 	Total   *int64 `json:"total,omitempty"`
 }
 

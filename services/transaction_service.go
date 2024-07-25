@@ -148,13 +148,23 @@ func (t TransactionService) performTransaction(data *dto.CreateTransactionDto, u
 		return errors.New("tenor not found")
 	}
 
+	currentLimit := 0.0
+	if err := t.db.QueryRow("SELECT `limit` FROM loans WHERE user_id = ? AND tenor = ?", userId, data.Tenor).Scan(&currentLimit); err != nil {
+		trx.Rollback()
+		return err
+	}
+	if currentLimit < data.Amount {
+		trx.Rollback()
+		return errors.New("loan limit exceeded")
+	}
+
 	installment := t.calculateInterset(data.Amount, interest, data.Tenor)
 	total := installment + fee
 	r, err := trx.ExecContext(context.Background(), `
     INSERT INTO transactions
-    (contract_number, user_id, otr, fee, installment, interest, status, asset_name)
+    (contract_number, user_id, otr, fee, installment, interest, status, asset_name, tenor)
     VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?)`,
+    (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		contractNumber,
 		userId,
 		data.Amount,
@@ -163,6 +173,7 @@ func (t TransactionService) performTransaction(data *dto.CreateTransactionDto, u
 		interest,
 		"pending",
 		data.AssetName,
+		data.Tenor,
 	)
 	if err != nil {
 		trx.Rollback()

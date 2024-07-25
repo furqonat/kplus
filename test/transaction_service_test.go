@@ -12,8 +12,8 @@ import (
 
 type MockRandomIntGenerator struct{}
 
-func (m MockRandomIntGenerator) RandomInt(min, max int) int {
-	return 49
+func (m MockRandomIntGenerator) RandomInt(min, max int) string {
+	return "49"
 }
 
 func TestTransactionService_GetTransaction(t *testing.T) {

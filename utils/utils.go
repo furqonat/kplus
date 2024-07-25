@@ -3,6 +3,7 @@ package utils
 import (
 	"regexp"
 	"strconv"
+	"time"
 
 	"go.uber.org/fx"
 	"golang.org/x/exp/rand"
@@ -49,17 +50,20 @@ func StringToInt(s string) int {
 }
 
 type RandomIntGenerator interface {
-	RandomInt(min, max int) int
+	RandomInt(min, max int) string
 }
 
 type DefaultRandomIntGenerator struct{}
 
-func (d DefaultRandomIntGenerator) RandomInt(min, max int) int {
-	return randomInt(min, max)
-}
+func (d DefaultRandomIntGenerator) RandomInt(min, max int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	rand.Seed(uint64(time.Now().UnixNano())) // Seed the random number generator
 
-func randomInt(min, max int) int {
-	return min + rand.Intn(max-min)
+	result := make([]byte, max)
+	for i := range result {
+		result[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(result)
 }
 
 func NewRandomIntGenerator() RandomIntGenerator {

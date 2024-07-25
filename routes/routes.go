@@ -7,6 +7,7 @@ var Module = fx.Options(
 	fx.Provide(NewAuthRoute),
 	fx.Provide(NewUserRoute),
 	fx.Provide(NewTransactionRoute),
+	fx.Provide(NewInstallmentRoute),
 )
 
 type Route interface {
@@ -19,11 +20,13 @@ func NewRoutes(
 	authRoute AuthRoute,
 	userRoute UserRoute,
 	transactionRoute TransactionRoute,
+	installmentRoute InstallmentRoute,
 ) Routes {
 	return Routes{
 		authRoute,
 		userRoute,
 		transactionRoute,
+		installmentRoute,
 	}
 }
 
